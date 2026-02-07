@@ -1,0 +1,19 @@
+# datasets / outputs
+# datasets/
+runs/
+results/
+*.cache
+demo/
+
+# model files
+*.pt
+*.onnx
+
+# archives
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+# OS junk
+.DS_Store

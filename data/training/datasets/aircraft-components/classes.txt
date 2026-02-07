@@ -1,0 +1,11 @@
+Connector
+Bus
+Breaker
+Switch
+Solenoid
+GND
+Resistor
+Diode
+Relay
+Component
+Transistor

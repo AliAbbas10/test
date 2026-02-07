@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+import argparse
+import random
+import shutil
+from pathlib import Path
+
+
+def rewrite_yolo_label_file(label_path: Path, new_class_id: int) -> None:
+    """
+    Rewrites a YOLO label file so that each annotation line starts with `new_class_id`.
+    Example line:
+        5 0.123 0.456 0.2 0.1
+    becomes:
+        0 0.123 0.456 0.2 0.1
+    """
+    if not label_path.exists():
+        return
+
+    lines_out = []
+    with label_path.open("r", encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line:
+                continue  # ignore empty lines
+
+            parts = line.split()
+            if len(parts) < 5:
+                # Not a standard YOLO row; keep as-is (or skip)
+                lines_out.append(line)
+                continue
+
+            # Replace class id
+            parts[0] = str(new_class_id)
+            lines_out.append(" ".join(parts))
+
+    label_path.write_text("\n".join(lines_out) + ("\n" if lines_out else ""), encoding="utf-8")
+
+
+
+
+def split_yolo_dataset(input_dir: Path, output_root: Path, train_percent: int, seed: int = 42) -> None:
+    if not input_dir.exists() or not input_dir.is_dir():
+        raise ValueError(f"Input directory does not exist or is not a directory: {input_dir}")
+
+    if not (1 <= train_percent <= 100):
+        raise ValueError("train_percent must be an integer between 1 and 100")
+
+    # Output directories
+    train_images_dir = output_root / "images" / "train"
+    val_images_dir = output_root / "images" / "validation"
+    train_labels_dir = output_root / "labels" / "train"
+    val_labels_dir = output_root / "labels" / "validation"
+
+    for d in [train_images_dir, val_images_dir, train_labels_dir, val_labels_dir]:
+        d.mkdir(parents=True, exist_ok=True)
+
+    # Find all .png files
+    png_files = sorted(input_dir.glob("*.png"))
+
+    # Build paired samples: (png_path, txt_path)
+    samples = []
+
+    for png_path in png_files:
+        base = png_path.stem
+        txt_path = input_dir / f"{base}.txt"
+
+        # Must have matching annotation .txt
+        if not txt_path.exists():
+            continue
+
+        # Omit classes.txt specifically
+        if txt_path.name == "classes.txt":
+            continue
+
+        samples.append((png_path, txt_path))
+
+    if not samples:
+        raise RuntimeError("No valid (png, txt) pairs found in the input directory.")
+
+    # Shuffle deterministically
+    random.seed(seed)
+    random.shuffle(samples)
+
+    # Compute split index
+    n_total = len(samples)
+    n_train = int(round(n_total * (train_percent / 100.0)))
+    n_train = max(0, min(n_total, n_train))  # safety clamp
+
+    train_samples = samples[:n_train]
+    val_samples = samples[n_train:]
+
+    def copy_sample(png_path: Path, txt_path: Path, images_dst: Path, labels_dst: Path):
+        shutil.copy2(png_path, images_dst / png_path.name)
+        shutil.copy2(txt_path, labels_dst / txt_path.name)
+        # Keep original class labels for classification
+
+    # Copy files into YOLO structure
+    for png_path, txt_path in train_samples:
+        copy_sample(png_path, txt_path, train_images_dir, train_labels_dir)
+
+    for png_path, txt_path in val_samples:
+        copy_sample(png_path, txt_path, val_images_dir, val_labels_dir)
+
+    print("Done!")
+    print(f"Input: {input_dir}")
+    print(f"Output root: {output_root}")
+    print(f"Total paired samples: {n_total}")
+    print(f"Train: {len(train_samples)} samples ({train_percent}%)")
+    print(f"Validate: {len(val_samples)} samples ({100 - train_percent}%)")
+    print()
+    print("Created folders:")
+    print(f"  {train_images_dir}")
+    print(f"  {val_images_dir}")
+    print(f"  {train_labels_dir}")
+    print(f"  {val_labels_dir}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Split YOLO dataset (.png/.txt pairs) into images/train|validate and labels/train|validate."
+    )
+    parser.add_argument("input_dir", type=Path, help="Input directory containing .png and .txt files")
+    parser.add_argument("train_percent", type=int, help="Train split percent (1-100)")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Output root directory (default: input_dir, 'datasets/aircraft-components')"
+    )
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
+
+    args = parser.parse_args()
+
+    output_root = args.output if args.output is not None else (args.input_dir / "xyz")
+    split_yolo_dataset(args.input_dir, output_root, args.train_percent, args.seed)

@@ -1,0 +1,13 @@
+argparse==1.4.0
+random2==1.0.2
+ultralytics==8.4.7
+pathlib==1.0.1
+collections
+IPython>=9.9.0
+pandas>=3.0.0
+
+# For jupyter notebooks ->
+
+# cv2>=4.13.0.90
+# numpy>=2.4.1
+# matplotlib>=3.10.8

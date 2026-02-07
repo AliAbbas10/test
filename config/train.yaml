@@ -1,0 +1,27 @@
+# Train/val/test sets
+path: ./data/training/datasets/aircraft-components # dataset root dir
+train: images/train # train images (relative to 'path')
+val: images/validation # validation images (relative to 'path')
+test: images/test # test images (relative to 'path') - optional, for proper 3-way split
+
+nc: 19
+names:
+  0: Connector
+  1: Bus
+  2: Breaker
+  3: Switch
+  4: Solenoid
+  5: GND
+  6: Resistor
+  7: Diode
+  8: Relay
+  9: Component
+  10: Transistor
+  11: Capacitor
+  12: Inductor
+  13: Transformer
+  14: LED
+  15: Fuse
+  16: Motor
+  17: Battery
+  18: Sensor
