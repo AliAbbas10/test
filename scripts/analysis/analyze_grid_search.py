@@ -63,9 +63,9 @@ best_model_dest = Path('models/best_trained_model.pt')
 if best_model_source.exists():
     best_model_dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(best_model_source, best_model_dest)
-    print(f"\n✅ Best model copied to: {best_model_dest}")
+    print(f"\n[INFO] Best model copied to: {best_model_dest}")
     print(f"   Use this for testing and inference!")
 else:
-    print(f"\n⚠️  Warning: Best model file not found at {best_model_source}")
+    print(f"\n[WARNING] Best model file not found at {best_model_source}")
 
 print('='*80)

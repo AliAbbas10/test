@@ -13,20 +13,15 @@ if __name__ == '__main__':
         device = 'cpu'
         print("No GPU detected, using CPU")
 
-    # Load the best trained model
-    candidate_model_paths = [
-        Path('models/best_trained_model.pt'),  # Best model from grid search analysis
-        Path('runs/detect/training/weights/best.pt'),
-        Path('runs/detect/experiment_labeled/weights/best.pt'),
-    ]
-    model_path = next((p for p in candidate_model_paths if p.exists()), None)
-    if model_path is None:
+    # Load the trained model from train.py
+    model_path = Path('runs/detect/training/weights/best.pt')
+    if not model_path.exists():
         raise FileNotFoundError(
-            "Could not find YOLO weights. Checked:\n"
-            + "\n".join(str(p) for p in candidate_model_paths)
+            f"Trained model not found at {model_path}\n"
+            "Run train.py first to generate the model."
         )
 
-    print(f"Using YOLO weights: {model_path}")
+    print(f"Using trained model: {model_path}")
     model = YOLO(str(model_path))
     
     # Get class names
