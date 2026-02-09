@@ -301,3 +301,33 @@ def train_triplet_network():
 
 if __name__ == '__main__':
     train_triplet_network()
+    
+# 1. Data Preparation
+#    ├── Load aircraft images from training directory
+#    ├── Read YOLO label files (.txt format)
+#    ├── Extract component crops using bounding box coordinates  
+#    └── Group components by class ID
+
+# 2. Triplet Generation (during training)
+#    ├── Select random anchor class
+#    ├── Pick anchor + positive from same class
+#    ├── Pick negative from different class
+#    └── Resize all to 128x128, normalize to [0,1]
+
+# 3. Network Architecture
+#    ├── ResNet-18 backbone (feature extraction)
+#    ├── Global Average Pooling
+#    ├── FC Layer: 512 → 256 (ReLU, Dropout)
+#    ├── FC Layer: 256 → 128 (embedding output)
+#    └── L2 Normalization
+
+# 4. Training Process
+#    ├── Forward pass: Generate embeddings for triplet
+#    ├── Calculate triplet loss
+#    ├── Backpropagation and optimization (Adam)
+#    ├── Learning rate scheduling (StepLR)
+#    └── Save best model based on lowest loss
+
+# 5. Output
+#    ├── Best model: triplet_embedding_best.pt
+#    └── Final model: triplet_embedding_final.pt
